@@ -1,0 +1,266 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}  % unnecessary with TeXLive 2018+
+\usepackage{xcolor}
+
+\usepackage{acronym} % \ac[p], \acl[p], \acs[p], \acf[p]
+\usepackage[inline]{enumitem} % \begin{enumerate*} \end{enumerate*}
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{} % Remove auto-generated "References" by \bibliography
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage[]{siunitx}
+
+% Acronyms
+% --------
+\acrodef{CRDT}[CRDT]{Conflict-free Replicated Data Type}
+\acrodefplural{CRDT}[CRDTs]{Conflict-free Replicated Data Types}
+\acrodef{Loria}{Lorraine Research Laboratory in Computer Science and its Applications}
+\acrodef{OT}{Operational Transformation}
+
+\topmargin -20 mm
+\oddsidemargin -3 mm      %   Left margin on odd-numbered pages.
+\evensidemargin \oddsidemargin    %   Left margin on even-numbered pages.
+%\marginparwidth 5 mm       %   Width of marginal notes.
+\textwidth 170 mm % Width of text line.
+\textheight 235 mm % Height of text page.
+
+
+\parindent 0mm
+
+\newcommand{\commentaire}[1]{\small\textit{#1}}
+\newcommand{\umicrosecond}[1]{\SI{#1}{\micro\second}}
+
+\begin{document}
+\hspace{-8.5mm} \fbox{\LARGE École Doctorale IAEM -- Commission de mention informatique}
+
+\bigskip
+
+\centerline{\Large\textbf{Progress Report and CSI Report -- 2020-21}}
+\bigskip
+\bigskip
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\hrule
+
+\section*{\fbox{Administrative information}}
+
+\noindent\textbf{PhD student:}
+Matthieu Nicolas
+\\
+\noindent\textbf{Current PhD year in 2020-21:}
+4A
+\\
+\noindent\textbf{Laboratory:}
+Loria
+\\
+\noindent\textbf{Supervisor(s):}
+Olivier Perrin et Gérald Oster
+\\
+\noindent\textbf{Title of the PhD thesis:}
+(Ré)Identification efficace dans les types de données répliquées sans conflit (CRDTs)
+\\
+\noindent\textbf{Fundings for the PhD thesis:}
+ATER
+\\
+
+\noindent\textbf{Members of the CSI:}
+\begin{itemize}
+\item\textbf{scientific member:}
+  Stephan Merz
+\item\textbf{auxiliary member:}
+  Ye-Qiong Song
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section*{\fbox{Progress report}}
+
+\noindent\textbf{Short description of the subject:}
+
+Afin d'assurer leur haute disponibilité, les systèmes distribués à large échelle se doivent de répliquer leurs données tout en minimisant les coordinations nécessaires entre noeuds.
+Pour concevoir de tels systèmes, la littérature et l'industrie adoptent de plus en plus l'utilisation de types de données répliquées sans conflits (CRDTs).
+Les CRDTs sont des types de données qui offrent des comportements similaires aux types existants, tel l'Ensemble ou la Séquence.
+Ils se distinguent cependant des types traditionnels par leur spécification, qui supporte nativement les modifications concurrentes.
+À cette fin, les CRDTs incorporent un mécanisme de résolution de conflits au sein de leur spécification.
+
+Afin de résoudre les conflits de manière déterministe, les CRDTs associent généralement des identifiants aux éléments stockés au sein de la structure de données.
+Les identifiants doivent respecter un ensemble de contraintes en fonction du CRDT, telles que l'unicité ou l'appartenance à un ordre dense.
+Ces contraintes empêchent de borner la taille des identifiants.
+La taille des identifiants utilisés croît alors continuellement avec le nombre de modifications effectuées, aggravant le surcoût lié à l'utilisation des CRDTs par rapport aux structures de données traditionnelles.
+Le but de cette thèse est de proposer des solutions pour pallier ce problème.
+
+Nous présentons dans cette thèse deux contributions visant à répondre à ce problème :
+\begin{enumerate*}[label=(\roman*)]
+    \item Un nouveau CRDT pour Séquence, RenamableLogootSplit, qui intègre un mécanisme de renommage à sa spécification.
+    Ce mécanisme de renommage permet aux noeuds du système de réattribuer des identifiants de taille minimale aux éléments de la séquence.
+    Cependant, cette première version requiert une coordination entre les noeuds pour effectuer un renommage.
+    L'évaluation expérimentale montre que le mécanisme de renommage permet de réinitialiser à chaque renommage le surcoût lié à l'utilisation du CRDT.
+    \item Une seconde version de RenamableLogootSplit conçue pour une utilisation dans un système distribué.
+    Cette nouvelle version permet aux noeuds de déclencher un renommage sans coordination préalable.
+\end{enumerate*}
+
+\noindent\textbf{Main results of the year:}
+
+% L'année passée, nous avions procédé à une première validation de RenamableLogootSplit.
+% Cette validation avait pour but de vérifier la correction du mécanisme de résolution de conflits entre les opérations de renommage et les opérations d'insertion et suppression ainsi que d'évaluer son coût.
+% Nous avions effectué cette validation de manière expérimentale, par le biais de simulations reproduisant la rédaction d'un article par un ensemble de pairs.
+
+% Les résultats obtenus montraient que les pairs convergeaient.
+% Ils confirmaient que le mécanisme de renommage permet de réduire les métadonnées de la structure, et à terme de les supprimer dans leur quasi-globalité.
+% Les mesures indiquaient aussi que le renommage réduit le temps d'intégration des modifications suivantes.
+
+Cette année, nous avons procédé à la validation de la seconde version de RenamableLogootSplit et plus particulièrement de son mécanisme de résolution de conflits pour les opérations de renommage concurrentes.
+
+Pour fonctionner, ce mécanisme définit une relation d'ordre strict total sur les renommages.
+Cette relation d'ordre permet aux différents pairs de sélectionner un même renommage comme \emph{renommage cible} sans nécessiter de coordination.
+De plus, chaque pair maintient localement l'arborescence des différents renommages dont il a connaissance.
+Grâce à cette arborescence, chaque pair peut déterminer quels renommages appliquer et lesquels ignorer pour atteindre son \emph{renommage cible} courant.
+Si à la réception d'une nouvelle opération de renommage, un pair réalise qu'il a appliqué un ou plusieurs renommages n'appartenant pas au chemin vers le \emph{renommage cible} courant, une fonction d'inversion du renommage lui permet d'annuler leurs effets.
+
+Pour valider ce mécanisme de résolution de conflits, nous avons procédé à une évaluation expérimentale.Cette évaluation prend la forme de simulations qui reproduisent la rédaction d'un article par un ensemble de pairs.
+Au cours de ces simulations, nous forçons ponctuellement les pairs à générer des opérations de renommages concurrentes.
+
+Ces simulations nous ont tout d'abord permis de confirmer que l'ensemble des pairs convergeaient.
+Ce résultat nous a permis d'accroître la confiance que nous avons en la correction des fonctions de renommage et d'inversion du renommage, à défaut d'en proposer une preuve formelle.
+
+Nous avons ensuite utilisé les traces issues de ces simulations pour évaluer les performances du mécanisme de résolution de conflits.
+Les fonctions de renommage et d'inversion du renommage utilisées pour gérer les opérations d'insertion et de suppression concurrentes à une opération de renommage introduisent chacune un surcoût computationel (respectivement \umicrosecond{250} et \umicrosecond{100} par renommage à appliquer/inverser).
+Ce surcoût est cependant contrebalancé par l'effet du renommage, qui optimise l'état de la structure de données.
+L'optimisation de l'état réduit le temps d'intégration de toutes les prochaines opérations (de \umicrosecond{300}).
+Ceci permet à RenamableLogootSplit d'offrir de meilleures performances que LogootSplit, tant que les pairs maintiennent une distance courte entre leur \emph{renommage cible} courant.
+
+Nous avons aussi évalué l'impact du nombre d'opérations de renommage concurrentes sur les performances de RenamableLogootSplit.
+Les résultats obtenus indiquent que chaque opération de renommage concurrente introduit un surcoût conséquent aussi bien en termes de métadonnées (\SI{2}{\mega o} dans le cadre de nos simulations) que de calculs (\SI{600}{\milli\second} à \SI{2}{\second} en fonction du nombre d'identifiants à renommer).
+Le surcoût en métadonnées n'est lui que temporaire.
+Une fois que l'ensemble des pairs a progressé suffisamment, les pairs peuvent supprimer les métadonnées associés aux renommages devenus obsolètes.
+Mais pour limiter le surcoût computationel du mécanisme de renommage, il est nécessaire de minimiser le nombre d'opérations de renommage concurrentes émises.
+
+Nous avons rédigé un article de journal (draft~: \url{https://github.com/MatthieuNICOLAS/2021-application-tpds/blob/master/main.pdf}) décrivant l'ensemble de ces travaux et les résultats obtenus.
+Actuellement en cours de finalisation, nous allons soumettre cet article au journal IEEE Transactions on Parallel and Distributed Systems (\url{https://dl.acm.org/journal/tpds}) ces prochaines semaines.
+\\
+
+% TODO: Étude d'une implémentation alternative à base d'operation log permettant de réduire le coût computationel de l'opé rename et de contourner le besoin de redo, au détriment du besoin de maintenir un log des opérations
+
+\noindent\textbf{Plan for next year:}
+\commentaire{%
+  remaining problems to be considered, approach; precise planning (in
+  particular for those who are at least in 3rd year, for the report
+  writing and the defense)\\}
+
+\noindent\textbf{Publications:}
+\bibliographystyle{plain}
+\bibliography{publications}
+\nocite{*}
+
+\noindent\textbf{Project after the thesis:}
+J'envisage actuellement soit de poursuivre une carrière dans l'académie en tant qu'enseigneur-chercheur, soit de m'orienter vers une carrière d'ingénieur R\&D au sein de l'académie ou de l'industrie.
+\\
+
+\noindent\textbf{Scientific and professional modules validated:}
+\paragraph{\footnotesize Scientific modules}
+  \begin{itemize}
+      \itemsep0em
+      \item Participation au module Réplication de données (M2 - Parcours SIS - Orientation SIRAV)
+      \item Participation à l'école d'été SATIS 2018
+      \item Participation à l'école d'été VTSA 2019
+  \end{itemize}
+\paragraph{\footnotesize Professional modules}
+  \begin{itemize}
+      \itemsep0em
+      \item Fi4 152 E Sauveteur Secouriste du Travail (SST)
+      \item Fi4 162 C Formation à la communication orale et corporelle en milieu professionnel
+      \item Fi4 282 Outils numériques pour la pédagogie (plateforme Arche, studio professeur)
+      \item Fi4 305 Culture de l’intégrité scientifique
+      \item PA1.1 MDD 14 - Eléments d’innovations pédagogiques
+  \end{itemize}
+
+\noindent\textbf{Date and signature of the PhD student}
+02 juin 2021
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section*{\fbox{Opinion of the supervisors} \textit{\small (to be filled by the supervisors)}}
+
+\noindent\textbf{Opinion on this progress report:}\\
+..................................................
+\\
+
+\noindent\textbf{Agreement for an additional year?}
+\commentaire{%
+  Yes/No (if No, please justify)\\}
+..................................................
+\\
+
+\noindent\textbf{Date of the defense:}
+\commentaire{%
+  this can be an approximation\\}
+..................................................
+\\
+
+
+\noindent\textbf{Date and signature of the PhD supervisors}
+
+..................................................
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section*{\fbox{Report of the Comité de Suivi Individuel} \textit{\small (to be filled by the ré\-fé\-rent scientifique)}}
+
+\commentaire{%
+  \textcolor{red}{The questions below are suggestions. For each
+    section, the report can be as short as “Yes” or more detailed
+    according to the feeling of the CSI.\\}}
+
+\noindent\textbf{Is the student confident with the PhD progression?}
+\commentaire{%
+  E.g.: How does the PhD student view the progress of
+  her/his thesis? How often does the student meet with her/his
+  supervisors? How is the student’s relationship with her/his
+  supervisors? In case of problems, does the student know who to
+  discuss these issues with?\\}
+..................................................
+\\
+
+\noindent\textbf{Is the PhD on good tracks?}
+\commentaire{%
+  E.g: Is the student comfortable with his/her thesis topic? Did
+  she/he embraced the subject? Do you have any comments or advice
+  concerning publications? Does the student have opportunities to
+  present her/his work? Do you have noteworthy concerns about the
+  progression of the thesis?\\}
+..................................................
+\\
+
+\noindent\textbf{Is the professional project sound?}
+\commentaire{%
+  E.g.: What is the professional project of the PhD student for after
+  the PhD? Is she/he aware of the various options and associated
+  expectations (postdoc abroad or in France, industrial R\&D,
+  application periods, teaching requirements, etc.)? Have contacts
+  been established? Do you have comments about the PhD student’s
+  plans for her/his training courses/schools?\\}
+..................................................
+\\
+
+\noindent\textbf{Conclusion:}
+No problem for an additional registration / Interview with the ED
+recommended
+
+\bigskip
+
+\noindent\textbf{Date:}
+..................................................
+\\
+
+\noindent\textbf{Signatures:}
+
+\begin{tabular}{p{5cm}p{12cm}}
+  PhD student & Two members of the CSI\\
+  ........................................
+  &
+  ........................................
+  ........................................
+\end{tabular}
+
+\end{document}
